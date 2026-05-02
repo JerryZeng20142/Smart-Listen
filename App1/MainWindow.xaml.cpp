@@ -24,19 +24,22 @@ namespace winrt::App1::implementation
         m_mediaPlayer.Volume(0.5);
         m_mediaPlayer.MediaEnded([this](MediaPlayer const&, IInspectable const&)
             {
-                StopTimer();
                 m_isPlaying = false;
                 UpdatePlayPauseButton();
             });
 
         InitializeComponent();
-
         m_dispatcher = DispatcherQueue::GetForCurrentThread();
     }
 
     void MainWindow::OpenButton_Click(IInspectable const&, RoutedEventArgs const&)
     {
         OpenFileAsync();
+    }
+
+    void MainWindow::UpdateButton_Click(IInspectable const&, RoutedEventArgs const&)
+    {
+        UpdateTimeDisplay();
     }
 
     winrt::Windows::Foundation::IAsyncAction MainWindow::OpenFileAsync()
@@ -61,10 +64,7 @@ namespace winrt::App1::implementation
         auto file = co_await picker.PickSingleFileAsync();
         if (file)
         {
-            if (m_mediaPlayer.PlaybackSession().PlaybackState() != MediaPlaybackState::None)
-            {
-                StopButton_Click(nullptr, nullptr);
-            }
+            StopButton_Click(nullptr, nullptr);
 
             auto source = MediaSource::CreateFromStorageFile(file);
             m_mediaPlayer.Source(source);
@@ -93,12 +93,10 @@ namespace winrt::App1::implementation
         if (m_isPlaying)
         {
             m_mediaPlayer.Pause();
-            StopTimer();
         }
         else
         {
             m_mediaPlayer.Play();
-            StartTimer();
         }
 
         m_isPlaying = !m_isPlaying;
@@ -110,7 +108,6 @@ namespace winrt::App1::implementation
         m_mediaPlayer.Pause();
         m_mediaPlayer.Position(TimeSpan{ 0 });
         m_isPlaying = false;
-        StopTimer();
         UpdatePlayPauseButton();
         UpdateTimeDisplay();
     }
@@ -193,29 +190,5 @@ namespace winrt::App1::implementation
         wchar_t buffer[32];
         swprintf_s(buffer, L"%lld:%02lld", minutes, seconds);
         return buffer;
-    }
-
-    void MainWindow::StartTimer()
-    {
-        StopTimer();
-
-        m_timer = [this]() -> IAsyncAction
-        {
-            auto lifetime = get_strong();
-            while (true)
-            {
-                co_await winrt::resume_after(std::chrono::milliseconds(100));
-                UpdateTimeDisplay();
-            }
-        }();
-    }
-
-    void MainWindow::StopTimer()
-    {
-        if (m_timer)
-        {
-            m_timer.Cancel();
-            m_timer = nullptr;
-        }
     }
 }

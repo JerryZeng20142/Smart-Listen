@@ -19,6 +19,7 @@
 
         <muxc:CommandBar Grid.Row="0" DefaultLabelPosition="Right">
             <muxc:AppBarButton x:Name="OpenButton" Icon="OpenFile" Label="打开音频" Click="OpenButton_Click"/>
+            <muxc:AppBarButton x:Name="UpdateButton" Icon="Refresh" Label="更新进度" Click="UpdateButton_Click"/>
             <muxc:AppBarSeparator/>
         </muxc:CommandBar>
 

@@ -9,6 +9,7 @@ namespace winrt::App1::implementation
         MainWindow();
 
         void OpenButton_Click(winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
+        void UpdateButton_Click(winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
         void PlayPauseButton_Click(winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
         void StopButton_Click(winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
         void ProgressSlider_ValueChanged(winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs const& e);
@@ -19,15 +20,12 @@ namespace winrt::App1::implementation
         winrt::Windows::Foundation::TimeSpan m_duration{ 0 };
         bool m_isPlaying{ false };
         bool m_isSliderChanging{ false };
-        winrt::Windows::Foundation::IAsyncAction m_timer{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 
         winrt::Windows::Foundation::IAsyncAction OpenFileAsync();
         void UpdatePlayPauseButton();
         void UpdateTimeDisplay();
         winrt::hstring FormatTime(winrt::Windows::Foundation::TimeSpan time);
-        void StartTimer();
-        void StopTimer();
     };
 }
 
