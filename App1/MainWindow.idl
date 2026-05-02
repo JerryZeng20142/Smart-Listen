@@ -1,4 +1,4 @@
-namespace App1
+namespace SmartListen
 {
     [default_interface]
     runtimeclass MainWindow : Microsoft.UI.Xaml.Window

@@ -1,106 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window
-    x:Class="App1.MainWindow"
+<Window x:Class="SmartListen.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:App1"
+    xmlns:local="using:SmartListen"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Title="Smart Listen">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <muxc:CommandBar Grid.Row="0" DefaultLabelPosition="Right">
-            <muxc:AppBarButton x:Name="OpenButton" Icon="OpenFile" Label="打开音频" Click="OpenButton_Click"/>
-            <muxc:AppBarButton x:Name="UpdateButton" Icon="Refresh" Label="更新进度" Click="UpdateButton_Click"/>
-            <muxc:AppBarSeparator/>
-        </muxc:CommandBar>
+        <!-- 主内容区域 - 专辑封面和歌词 -->
+        <Grid Grid.Row="0" Background="#1A1A1A">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="24" Spacing="24">
-                <muxc:InfoBar x:Name="InfoBar" Severity="Informational" IsOpen="True"
-                    Title="欢迎使用 Smart Listen"
-                    Message="请点击上方按钮打开音频文件开始播放"/>
-
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="24">
-                    <StackPanel Spacing="16">
-                        <TextBlock x:Name="FileNameText" Text="未选择文件" 
-                                   Style="{ThemeResource TitleTextBlockStyle}" 
-                                   TextWrapping="Wrap"/>
-                        <TextBlock x:Name="DurationText" Text="时长: --:--" 
-                                   Style="{ThemeResource BodyTextBlockStyle}"/>
-                    </StackPanel>
+            <!-- 专辑封面区域 -->
+            <Grid Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border Width="300" Height="300" CornerRadius="8" Background="#2D2D2D">
+                    <Grid>
+                        <FontIcon Glyph="&#xE8D6;" FontSize="120" Foreground="#666666" 
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
                 </Border>
+            </Grid>
 
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="24">
-                    <TextBlock x:Name="LyricsText" Text="歌词/文本将在这里显示" 
-                               Style="{ThemeResource BodyTextBlockStyle}"
-                               TextWrapping="Wrap"/>
-                </Border>
+            <!-- 歌曲信息 -->
+            <StackPanel Grid.Row="1" Margin="24" HorizontalAlignment="Center">
+                <TextBlock x:Name="SongTitleText" Text="歌曲标题" 
+                           FontSize="28" FontWeight="SemiBold" Foreground="White"
+                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock x:Name="ArtistText" Text="艺术家" 
+                           FontSize="18" Foreground="#AAAAAA"
+                           HorizontalAlignment="Center"/>
             </StackPanel>
-        </ScrollViewer>
+        </Grid>
 
-        <Border Grid.Row="2" 
-                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="0,1,0,0">
-            <StackPanel Padding="16,12" Spacing="12">
-                <Grid>
+        <!-- 底部播放控制栏 -->
+        <Border Grid.Row="1" Background="#2D2D2D" Padding="16,12">
+            <StackPanel Spacing="8">
+                <!-- 进度条 -->
+                <Grid Margin="0,0,0,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="CurrentTimeText" Text="0:00" 
-                               VerticalAlignment="Center"
-                               Style="{ThemeResource CaptionTextBlockStyle}"/>
-                    <Slider Grid.Column="1" x:Name="ProgressSlider" 
-                            Margin="12,0"
+                    <TextBlock x:Name="CurrentTimeText" Grid.Column="0" Text="0:00" 
+                               Foreground="#AAAAAA" FontSize="12" VerticalAlignment="Center"/>
+                    <Slider x:Name="ProgressSlider" Grid.Column="1" Margin="12,0"
                             Minimum="0" Maximum="100" Value="0"
                             ValueChanged="ProgressSlider_ValueChanged"/>
-                    <TextBlock Grid.Column="2" x:Name="TotalTimeText" Text="0:00" 
-                               VerticalAlignment="Center"
-                               Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    <TextBlock x:Name="TotalTimeText" Grid.Column="2" Text="0:00" 
+                               Foreground="#AAAAAA" FontSize="12" VerticalAlignment="Center"/>
                 </Grid>
 
+                <!-- 播放控制按钮 -->
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                        <Button x:Name="PlayPauseButton" Width="48" Height="48" 
-                                Padding="0" Click="PlayPauseButton_Click">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;"/>
+                    <!-- 左侧控制 -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" 
+                                HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Button x:Name="ShuffleButton" Width="36" Height="36" 
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon Glyph="&#xE8B1;" FontSize="16" Foreground="#AAAAAA"/>
                         </Button>
-                        <Button x:Name="StopButton" Width="40" Height="40" 
-                                Padding="0" Click="StopButton_Click">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE71A;"/>
+                        <Button x:Name="PreviousButton" Width="36" Height="36" 
+                                Background="Transparent" BorderThickness="0" Padding="0" 
+                                Click="PreviousButton_Click">
+                            <FontIcon Glyph="&#xE892;" FontSize="20" Foreground="White"/>
                         </Button>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE767;" 
-                                  VerticalAlignment="Center"/>
-                        <Slider x:Name="VolumeSlider" Width="120" Minimum="0" Maximum="100" Value="50"
+                    <!-- 中间播放按钮 -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" 
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button x:Name="RewindButton" Width="40" Height="40" 
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon Glyph="&#xE893;" FontSize="20" Foreground="White"/>
+                        </Button>
+                        <Button x:Name="PlayPauseButton" Width="64" Height="64" 
+                                Background="White" BorderThickness="0" CornerRadius="32"
+                                Click="PlayPauseButton_Click">
+                            <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="28" Foreground="Black"/>
+                        </Button>
+                        <Button x:Name="ForwardButton" Width="40" Height="40" 
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon Glyph="&#xE894;" FontSize="20" Foreground="White"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- 右侧控制 -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="RepeatButton" Width="36" Height="36" 
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon Glyph="&#xE8EE;" FontSize="16" Foreground="#AAAAAA"/>
+                        </Button>
+                        <Button x:Name="VolumeButton" Width="36" Height="36" 
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon Glyph="&#xE767;" FontSize="16" Foreground="#AAAAAA"/>
+                        </Button>
+                        <Slider x:Name="VolumeSlider" Width="100" Minimum="0" Maximum="100" Value="50"
                                 ValueChanged="VolumeSlider_ValueChanged"/>
+                        <Button x:Name="OpenFileButton" Width="36" Height="36" 
+                                Background="Transparent" BorderThickness="0" Padding="0"
+                                Click="OpenFileButton_Click">
+                            <FontIcon Glyph="&#xE8E5;" FontSize="16" Foreground="#AAAAAA"/>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </StackPanel>

@@ -4,19 +4,16 @@
 #include "MainWindow.g.cpp"
 #endif
 
-#include <winrt/Microsoft.UI.Dispatching.h>
-#include <winrt/Windows.Media.Core.h>
-
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
-using namespace Microsoft::UI::Dispatching;
+using namespace Microsoft::UI::Xaml::Controls;
 using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::Media::Playback;
 using namespace Windows::Media::Core;
 using namespace Windows::Foundation;
 
-namespace winrt::App1::implementation
+namespace winrt::SmartListen::implementation
 {
     MainWindow::MainWindow()
     {
@@ -25,21 +22,15 @@ namespace winrt::App1::implementation
         m_mediaPlayer.MediaEnded([this](MediaPlayer const&, IInspectable const&)
             {
                 m_isPlaying = false;
-                UpdatePlayPauseButton();
+                UpdatePlayPauseIcon();
             });
 
         InitializeComponent();
-        m_dispatcher = DispatcherQueue::GetForCurrentThread();
     }
 
-    void MainWindow::OpenButton_Click(IInspectable const&, RoutedEventArgs const&)
+    void MainWindow::OpenFileButton_Click(IInspectable const&, RoutedEventArgs const&)
     {
         OpenFileAsync();
-    }
-
-    void MainWindow::UpdateButton_Click(IInspectable const&, RoutedEventArgs const&)
-    {
-        UpdateTimeDisplay();
     }
 
     winrt::Windows::Foundation::IAsyncAction MainWindow::OpenFileAsync()
@@ -53,31 +44,25 @@ namespace winrt::App1::implementation
         picker.FileTypeFilter().Append(L".m4a");
         picker.FileTypeFilter().Append(L".wma");
         picker.FileTypeFilter().Append(L".flac");
-
-        auto hwnd = ::GetActiveWindow();
-        auto initWindow = picker.try_as<IInitializeWithWindow>();
-        if (initWindow && hwnd)
-        {
-            initWindow->Initialize(hwnd);
-        }
+        picker.FileTypeFilter().Append(L".ogg");
+        picker.FileTypeFilter().Append(L".aac");
 
         auto file = co_await picker.PickSingleFileAsync();
         if (file)
         {
-            StopButton_Click(nullptr, nullptr);
-
             auto source = MediaSource::CreateFromStorageFile(file);
             m_mediaPlayer.Source(source);
 
-            FileNameText().Text(file.Name());
-            InfoBar().IsOpen(false);
+            SongTitleText().Text(file.Name());
 
-            co_await winrt::resume_after(std::chrono::milliseconds(100));
+            m_isPlaying = false;
+            UpdatePlayPauseIcon();
+
+            co_await resume_after(std::chrono::milliseconds(200));
 
             if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
             {
                 m_duration = m_mediaPlayer.PlaybackSession().NaturalDuration();
-                DurationText().Text(L"时长: " + FormatTime(m_duration));
                 TotalTimeText().Text(FormatTime(m_duration));
             }
         }
@@ -97,22 +82,21 @@ namespace winrt::App1::implementation
         else
         {
             m_mediaPlayer.Play();
+            StartTimeUpdateTimer();
         }
 
         m_isPlaying = !m_isPlaying;
-        UpdatePlayPauseButton();
+        UpdatePlayPauseIcon();
     }
 
-    void MainWindow::StopButton_Click(IInspectable const&, RoutedEventArgs const&)
+    void MainWindow::PreviousButton_Click(IInspectable const&, RoutedEventArgs const&)
     {
-        m_mediaPlayer.Pause();
         m_mediaPlayer.Position(TimeSpan{ 0 });
-        m_isPlaying = false;
-        UpdatePlayPauseButton();
         UpdateTimeDisplay();
     }
 
-    void MainWindow::ProgressSlider_ValueChanged(IInspectable const&, Controls::Primitives::RangeBaseValueChangedEventArgs const& e)
+    void MainWindow::ProgressSlider_ValueChanged(IInspectable const&, 
+        Primitives::RangeBaseValueChangedEventArgs const& e)
     {
         if (m_isSliderChanging || m_duration.count() == 0)
         {
@@ -122,63 +106,45 @@ namespace winrt::App1::implementation
         m_isSliderChanging = true;
         auto position = static_cast<int64_t>(e.NewValue() / 100.0 * m_duration.count());
         m_mediaPlayer.Position(TimeSpan{ position });
+        
+        CurrentTimeText().Text(FormatTime(m_mediaPlayer.Position()));
+        
         m_isSliderChanging = false;
     }
 
-    void MainWindow::VolumeSlider_ValueChanged(IInspectable const&, Controls::Primitives::RangeBaseValueChangedEventArgs const& e)
+    void MainWindow::VolumeSlider_ValueChanged(IInspectable const&, 
+        Primitives::RangeBaseValueChangedEventArgs const& e)
     {
-        m_mediaPlayer.Volume(static_cast<double>(e.NewValue()) / 100.0);
+        m_mediaPlayer.Volume(e.NewValue() / 100.0);
     }
 
-    void MainWindow::UpdatePlayPauseButton()
+    void MainWindow::UpdatePlayPauseIcon()
     {
-        if (!m_dispatcher)
-        {
-            return;
-        }
-
-        m_dispatcher.TryEnqueue([this]()
-        {
-            auto button = PlayPauseButton().try_as<Controls::Button>();
-            if (button)
-            {
-                auto icon = button.Content().try_as<Controls::FontIcon>();
-                if (icon)
-                {
-                    icon.Glyph(m_isPlaying ? L"\xE769" : L"\xE768");
-                }
-            }
-        });
+        PlayPauseIcon().Glyph(m_isPlaying ? L"\xE769" : L"\xE768");
     }
 
     void MainWindow::UpdateTimeDisplay()
     {
-        if (!m_dispatcher)
+        if (m_duration.count() == 0)
         {
-            return;
+            if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
+            {
+                m_duration = m_mediaPlayer.PlaybackSession().NaturalDuration();
+                TotalTimeText().Text(FormatTime(m_duration));
+            }
         }
 
-        m_dispatcher.TryEnqueue([this]()
+        if (!m_isSliderChanging)
         {
-            if (m_duration.count() == 0)
-            {
-                if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
-                {
-                    m_duration = m_mediaPlayer.PlaybackSession().NaturalDuration();
-                    DurationText().Text(L"时长: " + FormatTime(m_duration));
-                    TotalTimeText().Text(FormatTime(m_duration));
-                }
-            }
-
             auto position = m_mediaPlayer.Position();
             CurrentTimeText().Text(FormatTime(position));
 
-            if (m_duration.count() > 0 && !m_isSliderChanging)
+            if (m_duration.count() > 0)
             {
                 auto progress = (position.count() * 100.0) / m_duration.count();
                 ProgressSlider().Value(progress);
             }
-        });
+        }
     }
 
     hstring MainWindow::FormatTime(TimeSpan time)
@@ -190,5 +156,20 @@ namespace winrt::App1::implementation
         wchar_t buffer[32];
         swprintf_s(buffer, L"%lld:%02lld", minutes, seconds);
         return buffer;
+    }
+
+    winrt::Windows::Foundation::IAsyncAction MainWindow::StartTimeUpdateTimer()
+    {
+        auto lifetime = get_strong();
+        
+        while (m_isPlaying)
+        {
+            co_await resume_after(std::chrono::seconds(1));
+            
+            if (m_mediaPlayer.PlaybackSession().PlaybackState() == MediaPlaybackState::Playing)
+            {
+                UpdateTimeDisplay();
+            }
+        }
     }
 }
