@@ -20,7 +20,6 @@ namespace winrt::App1::implementation
         bool m_isPlaying{ false };
         bool m_isSliderChanging{ false };
         winrt::Windows::Foundation::IAsyncAction m_timer{ nullptr };
-        HWND m_hwnd{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 
         winrt::Windows::Foundation::IAsyncAction OpenFileAsync();

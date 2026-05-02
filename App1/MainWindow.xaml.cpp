@@ -16,12 +16,6 @@ using namespace Windows::Media::Playback;
 using namespace Windows::Media::Core;
 using namespace Windows::Foundation;
 
-MIDL_INTERFACE("EECDBF0E-BAE9-4CB6-A68E-9586464A9CCE")
-IWindowNative : public ::IUnknown
-{
-    virtual HRESULT STDMETHODCALLTYPE get_WindowHandle(HWND* hwnd) = 0;
-};
-
 namespace winrt::App1::implementation
 {
     MainWindow::MainWindow()
@@ -37,12 +31,6 @@ namespace winrt::App1::implementation
 
         InitializeComponent();
 
-        auto windowNative = this->try_as<::IWindowNative>();
-        if (windowNative)
-        {
-            windowNative->get_WindowHandle(&m_hwnd);
-        }
-
         m_dispatcher = DispatcherQueue::GetForCurrentThread();
     }
 
@@ -55,11 +43,6 @@ namespace winrt::App1::implementation
     {
         auto lifetime = get_strong();
 
-        if (m_hwnd == nullptr)
-        {
-            co_return;
-        }
-
         auto picker = FileOpenPicker();
         picker.SuggestedStartLocation(PickerLocationId::MusicLibrary);
         picker.FileTypeFilter().Append(L".mp3");
@@ -68,10 +51,11 @@ namespace winrt::App1::implementation
         picker.FileTypeFilter().Append(L".wma");
         picker.FileTypeFilter().Append(L".flac");
 
+        auto hwnd = ::GetActiveWindow();
         auto initWindow = picker.try_as<IInitializeWithWindow>();
-        if (initWindow)
+        if (initWindow && hwnd)
         {
-            initWindow->Initialize(m_hwnd);
+            initWindow->Initialize(hwnd);
         }
 
         auto file = co_await picker.PickSingleFileAsync();
