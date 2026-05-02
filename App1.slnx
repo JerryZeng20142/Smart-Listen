@@ -4,8 +4,8 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="App1/App1 (Package)/App1 (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+  <Project Path="App1 (Package)/App1 (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
     <Deploy />
   </Project>
-  <Project Path="App1/App1/App1.vcxproj" />
+  <Project Path="App1/App1.vcxproj" Id="cd9603ca-90fd-4382-aa3a-cea1b46bba5e" />
 </Solution>

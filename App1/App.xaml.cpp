@@ -16,6 +16,9 @@ namespace winrt::App1::implementation
     /// </summary>
     App::App()
     {
+        // Ensure the Windows Runtime is initialized for this thread before any XAML/WinRT activation.
+        winrt::init_apartment();
+
         // Xaml objects should not call InitializeComponent during construction.
         // See https://github.com/microsoft/cppwinrt/tree/master/nuget#initializecomponent
 

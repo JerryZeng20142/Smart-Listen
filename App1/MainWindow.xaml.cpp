@@ -4,12 +4,23 @@
 #include "MainWindow.g.cpp"
 #endif
 
+#include <winrt/Microsoft.UI.Dispatching.h>
+#include <winrt/Windows.Media.Core.h>
+
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
+using namespace Microsoft::UI::Dispatching;
 using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::Media::Playback;
+using namespace Windows::Media::Core;
 using namespace Windows::Foundation;
+
+MIDL_INTERFACE("EECDBF0E-BAE9-4CB6-A68E-9586464A9CCE")
+IWindowNative : public ::IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE get_WindowHandle(HWND* hwnd) = 0;
+};
 
 namespace winrt::App1::implementation
 {
@@ -63,7 +74,7 @@ namespace winrt::App1::implementation
             FileNameText().Text(file.Name());
             InfoBar().IsOpen(false);
 
-            co_await resume_after(std::chrono::milliseconds(100));
+            co_await winrt::resume_after(std::chrono::milliseconds(100));
 
             if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
             {
@@ -179,9 +190,9 @@ namespace winrt::App1::implementation
             auto lifetime = get_strong();
             while (true)
             {
-                co_await resume_after(std::chrono::milliseconds(100));
-                co_await resume_foreground(DispatcherQueue());
-                UpdateTimeDisplay();
+                co_await winrt::resume_after(std::chrono::milliseconds(100));
+                auto dispatcher = DispatcherQueue::GetForCurrentThread();
+                dispatcher.TryEnqueue([this]() { UpdateTimeDisplay(); });
             }
         }();
     }
