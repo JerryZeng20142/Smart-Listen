@@ -42,6 +42,8 @@ namespace winrt::App1::implementation
         {
             windowNative->get_WindowHandle(&m_hwnd);
         }
+
+        m_dispatcher = DispatcherQueue::GetForCurrentThread();
     }
 
     void MainWindow::OpenButton_Click(IInspectable const&, RoutedEventArgs const&)
@@ -149,37 +151,53 @@ namespace winrt::App1::implementation
 
     void MainWindow::UpdatePlayPauseButton()
     {
-        auto button = PlayPauseButton().try_as<Controls::Button>();
-        if (button)
+        if (!m_dispatcher)
         {
-            auto icon = button.Content().try_as<Controls::FontIcon>();
-            if (icon)
-            {
-                icon.Glyph(m_isPlaying ? L"\xE769" : L"\xE768");
-            }
+            return;
         }
+
+        m_dispatcher.TryEnqueue([this]()
+        {
+            auto button = PlayPauseButton().try_as<Controls::Button>();
+            if (button)
+            {
+                auto icon = button.Content().try_as<Controls::FontIcon>();
+                if (icon)
+                {
+                    icon.Glyph(m_isPlaying ? L"\xE769" : L"\xE768");
+                }
+            }
+        });
     }
 
     void MainWindow::UpdateTimeDisplay()
     {
-        if (m_duration.count() == 0)
+        if (!m_dispatcher)
         {
-            if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
+            return;
+        }
+
+        m_dispatcher.TryEnqueue([this]()
+        {
+            if (m_duration.count() == 0)
             {
-                m_duration = m_mediaPlayer.PlaybackSession().NaturalDuration();
-                DurationText().Text(L"时长: " + FormatTime(m_duration));
-                TotalTimeText().Text(FormatTime(m_duration));
+                if (m_mediaPlayer.PlaybackSession().NaturalDuration().count() > 0)
+                {
+                    m_duration = m_mediaPlayer.PlaybackSession().NaturalDuration();
+                    DurationText().Text(L"时长: " + FormatTime(m_duration));
+                    TotalTimeText().Text(FormatTime(m_duration));
+                }
             }
-        }
 
-        auto position = m_mediaPlayer.Position();
-        CurrentTimeText().Text(FormatTime(position));
+            auto position = m_mediaPlayer.Position();
+            CurrentTimeText().Text(FormatTime(position));
 
-        if (m_duration.count() > 0 && !m_isSliderChanging)
-        {
-            auto progress = (position.count() * 100.0) / m_duration.count();
-            ProgressSlider().Value(progress);
-        }
+            if (m_duration.count() > 0 && !m_isSliderChanging)
+            {
+                auto progress = (position.count() * 100.0) / m_duration.count();
+                ProgressSlider().Value(progress);
+            }
+        });
     }
 
     hstring MainWindow::FormatTime(TimeSpan time)
