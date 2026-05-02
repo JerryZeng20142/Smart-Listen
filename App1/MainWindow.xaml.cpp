@@ -37,8 +37,11 @@ namespace winrt::App1::implementation
 
         InitializeComponent();
 
-        auto windowNative = try_as<::IWindowNative>();
-        windowNative->get_WindowHandle(&m_hwnd);
+        auto windowNative = this->try_as<::IWindowNative>();
+        if (windowNative)
+        {
+            windowNative->get_WindowHandle(&m_hwnd);
+        }
     }
 
     void MainWindow::OpenButton_Click(IInspectable const&, RoutedEventArgs const&)
@@ -50,6 +53,11 @@ namespace winrt::App1::implementation
     {
         auto lifetime = get_strong();
 
+        if (m_hwnd == nullptr)
+        {
+            co_return;
+        }
+
         auto picker = FileOpenPicker();
         picker.SuggestedStartLocation(PickerLocationId::MusicLibrary);
         picker.FileTypeFilter().Append(L".mp3");
@@ -58,7 +66,11 @@ namespace winrt::App1::implementation
         picker.FileTypeFilter().Append(L".wma");
         picker.FileTypeFilter().Append(L".flac");
 
-        picker.as<IInitializeWithWindow>()->Initialize(m_hwnd);
+        auto initWindow = picker.try_as<IInitializeWithWindow>();
+        if (initWindow)
+        {
+            initWindow->Initialize(m_hwnd);
+        }
 
         auto file = co_await picker.PickSingleFileAsync();
         if (file)
@@ -191,8 +203,7 @@ namespace winrt::App1::implementation
             while (true)
             {
                 co_await winrt::resume_after(std::chrono::milliseconds(100));
-                auto dispatcher = DispatcherQueue::GetForCurrentThread();
-                dispatcher.TryEnqueue([this]() { UpdateTimeDisplay(); });
+                UpdateTimeDisplay();
             }
         }();
     }
